@@ -1,0 +1,6 @@
+# ignore large genome file downloaded
+*.fna.gz
+*.fa.gz
+*.fa
+studysession
+.DS_Store
