@@ -4,6 +4,7 @@
 
 import os, gzip, shutil
 import requests
+import pandas as pd
 
 # this function will create dictionary of mapping chr number to chr filename
 def constructDict():
@@ -39,8 +40,21 @@ def downloadGenome():
 def findSliverSeq(marker_file):
     markers = open(marker_file).readlines()
     result_seqs = []
+
+    # record information about sliver seq to write to csv file later 
+    chr_header = []
+    start_pos = []
+    end_pos = []
+
     for marker in markers:
         marker_list = marker.strip().split(' ')
+
+        # record info on input file to output to df later
+        chr_header.append(marker_list[0])
+        start_pos.append(int(marker_list[1]))
+        end_pos.append(int(marker_list[2]))
+
+        # find actual sliver sequences 
         chr_num = marker_list[0].replace('Chr', '')
         start = int(marker_list[1])
         length = int(marker_list[2]) - start
@@ -93,6 +107,29 @@ def findSliverSeq(marker_file):
             sliver_seq = sliver_seq + chr_seq[curr_line_index].strip()[:remaining]
         result_seqs.append(sliver_seq)
     print(result_seqs)
+
+    # append all result sequences to a text file line by line 
+    # format like: 
+    # ACTCTCTC
+    # AACTTTTCCCC
+    output = ''
+    for sliver_seq in result_seqs:
+        output = output + sliver_seq + '\n'
+    
+    # open result file and write to result file with all sliver seuqneces 
+    with open('sliver.txt', 'w') as result_file:
+        result_file.write(output)
+    result_file.close()
+
+    # open a csv file for storing all info about sliver sequence found 
+    # cotains chromosome pos and actual sliver sequnce 
+    df = pd.DataFrame()
+    df['Chromosome Position'] = chr_header
+    df['Start Position'] = start_pos
+    df['End Position'] = end_pos
+    df['Sequence'] = result_seqs
+    df.to_csv('sliver.csv', index=False)
+
     return result_seqs
 
 
